@@ -1,7 +1,7 @@
 const express = require('express')
-const productsRouter = require('./routes/products.routes')
 const app = express()
-const PORT = 8080
+const productsRouter = require('./routes/products.routes')
+const cartsRouter = require('./routes/carts.routes')
 
 app.use(express.json())
 app.get('/', (req, res) => {
@@ -9,5 +9,6 @@ app.get('/', (req, res) => {
 })
 
 app.use('/api/products', productsRouter)
+app.use('/api/carts', cartsRouter)
 
 module.exports = app

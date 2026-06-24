@@ -101,11 +101,11 @@ router.get("/:pid", (req, res) => {
   const pid = Number(req.params.pid);
   const searchedProduct = products.find((product) => product.id === pid);
 
-  if (searchedProduct) {
-    res.json(searchedProduct);
-  } else {
-    res.status(404).send({ error: "Producto no encontrado" });
-  }
+  if (!searchedProduct) {
+    return res.status(404).send({ error: "Producto no encontrado" });
+  } 
+
+  res.json(searchedProduct);
 });
 
 // Crear un nuevo producto
@@ -210,7 +210,7 @@ router.delete("/:pid", (req, res) => {
 
   products.splice(searchedId, 1);
 
-  res.json({message: "Producto eliminado con éxito"});
+  res.json({ message: "Producto eliminado con éxito" });
 });
 
 module.exports = router;
