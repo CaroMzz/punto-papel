@@ -3,65 +3,162 @@ const router = express.Router();
 const products = [
   {
     id: 1,
-    nombre: "Cuaderno A4 Rayado",
-    categoria: "Cuadernos",
-    precio: 4500,
+    title: "Cuaderno A4 Rayado",
+    description: "Cuaderno de 100 hojas rayadas tamaño A4",
+    code: "CUA001",
+    price: 4500,
+    status: true,
     stock: 25,
+    category: "Cuadernos",
+    thumbnails: [],
   },
   {
     id: 2,
-    nombre: "Set de Resaltadores Pastel",
-    categoria: "Marcadores",
-    precio: 3200,
-    stock: 18,
+    title: "Agenda 2026",
+    description: "Agenda diaria con tapa dura y diseño floral",
+    code: "AGE001",
+    price: 8900,
+    status: true,
+    stock: 12,
+    category: "Agendas",
+    thumbnails: [],
   },
   {
     id: 3,
-    nombre: "Agenda 2026",
-    categoria: "Agendas",
-    precio: 8900,
-    stock: 12,
+    title: "Set de Resaltadores Pastel",
+    description: "Pack de 6 resaltadores de colores pastel",
+    code: "RES001",
+    price: 3200,
+    status: true,
+    stock: 18,
+    category: "Marcadores",
+    thumbnails: [],
   },
   {
     id: 4,
-    nombre: "Lapicera Gel Negra",
-    categoria: "Escritura",
-    precio: 1200,
+    title: "Lapicera Gel Negra",
+    description: "Lapicera de tinta gel color negro",
+    code: "LAP001",
+    price: 1200,
+    status: true,
     stock: 50,
+    category: "Escritura",
+    thumbnails: [],
   },
   {
     id: 5,
-    nombre: "Carpeta A4 con Anillos",
-    categoria: "Organización",
-    precio: 5600,
+    title: "Carpeta A4 con Anillos",
+    description: "Carpeta rígida con mecanismo de 3 anillos",
+    code: "CAR001",
+    price: 5600,
+    status: true,
     stock: 15,
+    category: "Organización",
+    thumbnails: [],
   },
   {
     id: 6,
-    nombre: "Notas Adhesivas de Colores",
-    categoria: "Oficina",
-    precio: 1800,
-    stock: 40,
+    title: "Notas Adhesivas",
+    description: "Block de notas adhesivas multicolor",
+    code: "NOT001",
+    price: 1800,
+    status: false,
+    stock: 0,
+    category: "Oficina",
+    thumbnails: [],
   },
   {
     id: 7,
-    nombre: "Lápices de Colores x12",
-    categoria: "Arte",
-    precio: 3900,
+    title: "Lápices de Colores x12",
+    description: "Caja de 12 lápices de colores",
+    code: "LAP002",
+    price: 3900,
+    status: true,
     stock: 20,
+    category: "Arte",
+    thumbnails: [],
   },
   {
     id: 8,
-    nombre: "Regla Metálica 30 cm",
-    categoria: "Accesorios",
-    precio: 1500,
+    title: "Regla Metálica 30 cm",
+    description: "Regla de aluminio resistente de 30 cm",
+    code: "REG001",
+    price: 1500,
+    status: true,
     stock: 30,
+    category: "Accesorios",
+    thumbnails: [],
   },
 ];
 
 // Obtener todos los productos
 router.get("/", (req, res) => {
   res.json(products);
+});
+
+// Obtener los productos por id
+router.get("/:pid", (req, res) => {
+  const pid = Number(req.params.pid);
+  const searchedProduct = products.find((product) => product.id === pid);
+
+  if (searchedProduct) {
+    res.json(searchedProduct);
+  } else {
+    res.status(404).send({ error: "Producto no encontrado" });
+  }
+});
+
+// Crear un nuevo producto
+router.post("/", (req, res) => {
+  const title = req.body.title;
+  const description = req.body.description;
+  const code = req.body.code;
+  const price = req.body.price;
+  const stock = req.body.stock;
+  const category = req.body.category;
+  let thumbnails = req.body.thumbnails;
+
+  if (!title || !description || !code || !price || !stock || !category) {
+    res.status(400).send({ error: "Faltan campos obligatorios" });
+    return;
+  }
+
+  let newId;
+  if (products.length > 0) {
+    const lastProduct = products[products.length - 1];
+    newId = lastProduct.id + 1;
+  } else {
+    newId = 1;
+  }
+
+  if (!thumbnails) {
+    thumbnails = [];
+  } else {
+    thumbnails = req.body.thumbnails;
+  }
+
+  let status;
+  if (stock > 0) {
+    status = true;
+  } else {
+    status = false;
+  }
+
+  const newProduct = {
+    id: newId,
+    title: title,
+    description: description,
+    code: code,
+    price: price,
+    status: status,
+    stock: stock,
+    category: category,
+    thumbnails: thumbnails,
+  };
+
+  products.push(newProduct);
+
+  res.status(201).json(newProduct);
 });
 
 module.exports = router;
