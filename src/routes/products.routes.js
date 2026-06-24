@@ -161,4 +161,56 @@ router.post("/", (req, res) => {
   res.status(201).json(newProduct);
 });
 
+// Actualizar un producto
+router.put("/:pid", (req, res) => {
+  const pid = Number(req.params.pid);
+  const searchedId = products.findIndex((product) => product.id === pid);
+
+  if (searchedId === -1) {
+    return res.status(404).json({ error: "El producto no existe" });
+  }
+
+  const prevProduct = products[searchedId];
+
+  const title = req.body.title;
+  const description = req.body.description;
+  const code = req.body.code;
+  const price = req.body.price;
+  const stock = req.body.stock;
+  const category = req.body.category;
+  let thumbnails = req.body.thumbnails;
+
+  const finalStock = stock ?? prevProduct.stock;
+
+  const updatedProduct = {
+    id: prevProduct.id,
+    title: title ?? prevProduct.title,
+    description: description ?? prevProduct.description,
+    code: code ?? prevProduct.code,
+    price: price ?? prevProduct.price,
+    status: finalStock > 0,
+    stock: finalStock,
+    category: category ?? prevProduct.category,
+    thumbnails: thumbnails ?? prevProduct.thumbnails,
+  };
+
+  products[searchedId] = updatedProduct;
+
+  res.json(updatedProduct);
+});
+
+// Eliminar un producto
+router.delete("/:pid", (req, res) => {
+  const pid = Number(req.params.pid);
+  const searchedId = products.findIndex((product) => product.id === pid);
+
+  if (searchedId === -1) {
+    return res.status(404).json({ error: "El id no existe" });
+  }
+
+  products.splice(searchedId, 1);
+
+  res.json({message: "Producto eliminado con éxito"});
+});
+
 module.exports = router;
