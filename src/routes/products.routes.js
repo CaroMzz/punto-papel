@@ -91,9 +91,96 @@ const products = [
   },
 ];
 
-// Obtener todos los productos
+const normalizeText = (text) => {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+};
+
+/* --- Obtener todos los productos --- */
 router.get("/", (req, res) => {
-  res.json(products);
+  // Filtrar por categoria o disponibilidad
+  let resultedProducts = [...products];
+  let query = req.query.query;
+
+  if (query) {
+    normalizeText(query)
+    if (query === "true") {
+      resultedProducts = resultedProducts.filter(product => product.status === true);
+    }
+    else if (query === "false") {
+      resultedProducts = resultedProducts.filter(product => product.status === false);
+    }
+    else {
+      resultedProducts = resultedProducts.filter(product => normalizeText(product.category) === query);
+    }
+  } 
+
+  // Ordenar por precio
+  let sort = req.query.sort;
+
+  if (sort === "asc") {
+    resultedProducts.sort((product1, product2) => product1.price - product2.price);
+  }
+
+  if (sort === "desc") {
+    resultedProducts.sort((product1, product2) => product2.price - product1.price);
+  }
+  
+
+  // Limitar y paginar
+  let limit = Number(req.query.limit);
+  let page = Number(req.query.page);
+
+  if (!limit) {
+    limit = 10;
+  }
+  if (!page) {
+    page = 1;
+  }
+
+  const startIndex = (page - 1) * limit;
+  const endIndex = startIndex + limit;
+
+  const limitedProducts = resultedProducts.slice(startIndex, endIndex);
+
+  const totalPages = Math.ceil(resultedProducts.length / limit);
+  let prevPage, nextPage, hasPrevPage, hasNextPage;
+  let prevLink, nextLink;
+
+  if (page === 1) {
+    prevPage = null;
+    hasPrevPage = false;
+  } else {
+    prevPage = page - 1;
+    hasPrevPage = true;
+  }
+
+  if (page < totalPages) {
+    nextPage = page + 1;
+    hasNextPage = true;
+  } else {
+    nextPage = null;
+    hasNextPage = false;
+  }
+
+  prevLink = (hasPrevPage === true) ? `/api/products?limit=${limit}&page=${prevPage}` : null;
+  nextLink = (hasNextPage === true) ? `/api/products?limit=${limit}&page=${nextPage}` : null;
+
+  res.json({
+    status: "success",
+    payload: limitedProducts,
+    totalPages: totalPages,
+    page: page,
+    prevPage: prevPage,
+    nextPage: nextPage,
+    hasPrevPage: hasPrevPage,
+    hasNextPage: hasNextPage,
+    prevLink: prevLink,
+    nextLink: nextLink,
+  });
 });
 
 // Obtener los productos por id
@@ -103,7 +190,7 @@ router.get("/:pid", (req, res) => {
 
   if (!searchedProduct) {
     return res.status(404).send({ error: "Producto no encontrado" });
-  } 
+  }
 
   res.json(searchedProduct);
 });
