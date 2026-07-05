@@ -1,121 +1,28 @@
-const productManager = require("../dao/fs/ProductManager");
-const normalizeText = (text) => {
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim();
-};
+const productDao = require("../dao/mongo/ProductDao");
 
 const getProducts = async (req, res) => {
   try {
-    const productsFromFile = await productManager.getProducts();
+    const limit = Number(req.query.limit) || 10;
+    const page = Number(req.query.page) || 1;
+    const query = req.query.query;
+    const sort = req.query.sort;
 
-    // Filtrar por categoria o disponibilidad
-    let resultedProducts = [...productsFromFile];
-    let query = req.query.query;
+    const result = await productDao.getProducts({ limit, page, query, sort });
 
-    if (query) {
-      query = normalizeText(query);
-      if (query === "true") {
-        resultedProducts = resultedProducts.filter(
-          (product) => product.status === true,
-        );
-      } else if (query === "false") {
-        resultedProducts = resultedProducts.filter(
-          (product) => product.status === false,
-        );
-      } else {
-        resultedProducts = resultedProducts.filter(
-          (product) => normalizeText(product.category) === query,
-        );
-      }
-    }
-
-    // Ordenar por precio
-    let sort = req.query.sort;
-
-    if (sort === "asc") {
-      resultedProducts.sort(
-        (product1, product2) => product1.price - product2.price,
-      );
-    }
-
-    if (sort === "desc") {
-      resultedProducts.sort(
-        (product1, product2) => product2.price - product1.price,
-      );
-    }
-
-    // Limitar y paginar
-    let limit = Number(req.query.limit);
-    let page = Number(req.query.page);
-
-    if (!limit) {
-      limit = 10;
-    }
-    if (!page) {
-      page = 1;
-    }
-
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-
-    const limitedProducts = resultedProducts.slice(startIndex, endIndex);
-
-    const totalPages = Math.ceil(resultedProducts.length / limit);
-    let prevPage, nextPage, hasPrevPage, hasNextPage;
-    let prevLink, nextLink;
-
-    if (page === 1) {
-      prevPage = null;
-      hasPrevPage = false;
-    } else {
-      prevPage = page - 1;
-      hasPrevPage = true;
-    }
-
-    if (page < totalPages) {
-      nextPage = page + 1;
-      hasNextPage = true;
-    } else {
-      nextPage = null;
-      hasNextPage = false;
-    }
-
-    prevLink =
-      hasPrevPage === true
-        ? `/api/products?limit=${limit}&page=${prevPage}`
-        : null;
-    nextLink =
-      hasNextPage === true
-        ? `/api/products?limit=${limit}&page=${nextPage}`
-        : null;
-
-    res.json({
-      status: "success",
-      payload: limitedProducts,
-      totalPages: totalPages,
-      page: page,
-      prevPage: prevPage,
-      nextPage: nextPage,
-      hasPrevPage: hasPrevPage,
-      hasNextPage: hasNextPage,
-      prevLink: prevLink,
-      nextLink: nextLink,
-    });
+    res.json(result);
   } catch (error) {
-    res.status(500).json({ error: "Error al obtener los productos" });
+    res.status(500).json({ error: "Error al obtener productos" });
   }
 };
 
 const getProductById = async (req, res) => {
   try {
-    const pid = Number(req.params.pid);
-    const searchedProduct = await productManager.getProductById(pid);
+    const pid = req.params.pid;
+
+    const searchedProduct = await productDao.getProductById(pid);
 
     if (!searchedProduct) {
-      return res.status(404).send({ error: "Producto no encontrado" });
+      return res.status(404).json({ error: "Producto no encontrado" });
     }
 
     res.json(searchedProduct);
@@ -142,34 +49,25 @@ const createProduct = async (req, res) => {
       stock === undefined ||
       !category
     ) {
-      return res.status(400).send({ error: "Faltan campos obligatorios" });
+      return res.status(400).json({ error: "Faltan campos obligatorios" });
     }
 
     if (!thumbnails) {
       thumbnails = [];
-    } else {
-      thumbnails = req.body.thumbnails;
-    }
-
-    let status;
-    if (stock > 0) {
-      status = true;
-    } else {
-      status = false;
     }
 
     const productData = {
-      title: title,
-      description: description,
-      code: code,
-      price: price,
-      status: status,
-      stock: stock,
-      category: category,
-      thumbnails: thumbnails,
+      title,
+      description,
+      code,
+      price,
+      status: stock > 0,
+      stock,
+      category,
+      thumbnails,
     };
 
-    const createdProduct = await productManager.createProduct(productData);
+    const createdProduct = await productDao.createProduct(productData);
 
     res.status(201).json(createdProduct);
   } catch (error) {
@@ -179,7 +77,7 @@ const createProduct = async (req, res) => {
 
 const updateProduct = async (req, res) => {
   try {
-    const pid = Number(req.params.pid);
+    const pid = req.params.pid;
 
     const updatedData = {
       title: req.body.title,
@@ -191,7 +89,11 @@ const updateProduct = async (req, res) => {
       thumbnails: req.body.thumbnails,
     };
 
-    const updatedProduct = await productManager.updateProduct(pid, updatedData);
+    if (req.body.stock !== undefined) {
+      updatedData.status = req.body.stock > 0;
+    }
+
+    const updatedProduct = await productDao.updateProduct(pid, updatedData);
 
     if (!updatedProduct) {
       return res.status(404).json({ error: "Producto no encontrado" });
@@ -205,14 +107,18 @@ const updateProduct = async (req, res) => {
 
 const deleteProduct = async (req, res) => {
   try {
-    const pid = Number(req.params.pid);
+    const pid = req.params.pid;
 
-    const deletedProduct = await productManager.deleteProduct(pid);
+    const deletedProduct = await productDao.deleteProduct(pid);
+
     if (!deletedProduct) {
       return res.status(404).json({ error: "Producto no encontrado" });
     }
 
-    res.json({ message: "Producto eliminado con éxito", deletedProduct });
+    res.json({
+      message: "Producto eliminado con exito",
+      deletedProduct,
+    });
   } catch (error) {
     res.status(500).json({ error: "Error al eliminar el producto" });
   }
