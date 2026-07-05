@@ -1,0 +1,24 @@
+<section class="detail">
+  <a class="back" href="/products">Volver a productos</a>
+
+  <article class="detail-panel">
+    <span class="category">{{product.category}}</span>
+    <h1>{{product.title}}</h1>
+    <p>{{product.description}}</p>
+
+    <div class="detail-meta">
+      <strong>${{product.price}}</strong>
+      <span>Stock: {{product.stock}}</span>
+      <span>Codigo: {{product.code}}</span>
+    </div>
+
+    <div class="cart-box" data-product-id="{{product._id}}">
+      <label for="cartId">ID del carrito</label>
+      <input id="cartId" type="text" placeholder="Pega el _id del carrito" />
+      <button id="addToCartBtn">Agregar al carrito</button>
+      <p id="cartMessage"></p>
+    </div>
+  </article>
+</section>
+
+<script src="/js/product-detail.js"></script>

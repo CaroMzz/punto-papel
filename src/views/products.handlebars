@@ -1,0 +1,54 @@
+<section class="page-header">
+  <div>
+    <h1>Productos</h1>
+    <p>Catalogo de productos disponibles en Punto Papel.</p>
+  </div>
+</section>
+
+<section class="cart-actions">
+  <button id="createCartBtn">Crear carrito</button>
+  <a id="currentCartLink" class="button hidden" href="#">Ver carrito actual</a>
+  <p id="cartStatus"></p>
+</section>
+
+<section class="toolbar">
+  <a href="/products?sort=asc">Menor precio</a>
+  <a href="/products?sort=desc">Mayor precio</a>
+  <a href="/products?query=true">Disponibles</a>
+  <a href="/products">Ver todos</a>
+</section>
+
+<section class="grid">
+  {{#each products}}
+    <article class="card">
+      <div class="card-body">
+        <span class="category">{{this.category}}</span>
+        <h2>{{this.title}}</h2>
+        <p>{{this.description}}</p>
+        <div class="meta">
+          <strong>${{this.price}}</strong>
+          <span>Stock: {{this.stock}}</span>
+        </div>
+        <a class="button" href="/products/{{this._id}}">Ver detalle</a>
+      </div>
+    </article>
+  {{/each}}
+</section>
+
+<nav class="pagination">
+  {{#if pagination.prevLink}}
+    <a href="{{pagination.prevLink}}">Anterior</a>
+  {{else}}
+    <span>Anterior</span>
+  {{/if}}
+
+  <strong>Pagina {{pagination.page}} de {{pagination.totalPages}}</strong>
+
+  {{#if pagination.nextLink}}
+    <a href="{{pagination.nextLink}}">Siguiente</a>
+  {{else}}
+    <span>Siguiente</span>
+  {{/if}}
+</nav>
+
+<script src="/js/products.js"></script>

@@ -1,14 +1,27 @@
-const express = require('express')
-const app = express()
-const productsRouter = require('./routes/products.routes')
-const cartsRouter = require('./routes/carts.routes')
+const express = require("express");
+const path = require("path");
+const { engine } = require("express-handlebars");
 
-app.use(express.json())
-app.get('/', (req, res) => {
-    res.send('Servidor funcionando')
-})
+const productsRouter = require("./routes/products.routes");
+const cartsRouter = require("./routes/carts.routes");
+const viewsRouter = require("./routes/views.routes");
 
-app.use('/api/products', productsRouter)
-app.use('/api/carts', cartsRouter)
+const app = express();
 
-module.exports = app
+app.engine("handlebars", engine());
+app.set("view engine", "handlebars");
+app.set("views", path.join(__dirname, "views"));
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, "public")));
+
+app.get("/", (req, res) => {
+  res.redirect("/products");
+});
+
+app.use("/", viewsRouter);
+app.use("/api/products", productsRouter);
+app.use("/api/carts", cartsRouter);
+
+module.exports = app;

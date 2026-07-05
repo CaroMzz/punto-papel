@@ -1,4 +1,5 @@
 const Cart = require("../../models/cart.model");
+const Product = require("../../models/product.model");
 
 class CartDao {
   async createCart() {
@@ -18,8 +19,18 @@ class CartDao {
       return null;
     }
 
+    const product = await Product.findById(productId);
+
+    if (!product) {
+      return "PRODUCT_NOT_FOUND";
+    }
+
+    if (product.stock <= 0) {
+      return "NO_STOCK";
+    }
+
     const productInCart = cart.products.find(
-      (item) => item.product.toString() === productId,
+      (item) => item.product.toString() === productId
     );
 
     if (productInCart) {
@@ -31,6 +42,10 @@ class CartDao {
       });
     }
 
+    product.stock -= 1;
+    product.status = product.stock > 0;
+
+    await product.save();
     await cart.save();
 
     return await Cart.findById(cartId).populate("products.product");
@@ -44,7 +59,7 @@ class CartDao {
     }
 
     const productIndex = cart.products.findIndex(
-      (item) => item.product.toString() === productId,
+      (item) => item.product.toString() === productId
     );
 
     if (productIndex === -1) {
@@ -66,7 +81,7 @@ class CartDao {
     }
 
     const productInCart = cart.products.find(
-      (item) => item.product.toString() === productId,
+      (item) => item.product.toString() === productId
     );
 
     if (!productInCart) {
@@ -87,7 +102,7 @@ class CartDao {
       {
         new: true,
         runValidators: true,
-      },
+      }
     ).populate("products.product");
 
     return updatedCart;
@@ -100,7 +115,7 @@ class CartDao {
       {
         new: true,
         runValidators: true,
-      },
+      }
     ).populate("products.product");
 
     return updatedCart;

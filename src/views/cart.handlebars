@@ -1,0 +1,25 @@
+<section class="page-header">
+  <div>
+    <h1>Carrito</h1>
+    <p>ID: {{cart._id}}</p>
+  </div>
+</section>
+
+<section class="cart-list">
+  {{#each cart.products}}
+    <article class="cart-item">
+      <div>
+        <h2>{{this.product.title}}</h2>
+        <p>{{this.product.description}}</p>
+        <span>{{this.product.category}}</span>
+      </div>
+
+      <div class="cart-meta">
+        <strong>${{this.product.price}}</strong>
+        <span>Cantidad: {{this.quantity}}</span>
+      </div>
+    </article>
+  {{/each}}
+</section>
+
+<a class="button" href="/products">Seguir comprando</a>

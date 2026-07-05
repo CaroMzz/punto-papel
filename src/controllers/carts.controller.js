@@ -32,8 +32,16 @@ const addProductToCart = async (req, res) => {
 
     const updatedCart = await cartDao.addProductToCart(cid, pid);
 
-    if (!updatedCart) {
+    if (updatedCart === null) {
       return res.status(404).json({ error: "Carrito no encontrado" });
+    }
+
+    if (updatedCart === "PRODUCT_NOT_FOUND") {
+      return res.status(404).json({ error: "Producto no encontrado" });
+    }
+
+    if (updatedCart === "NO_STOCK") {
+      return res.status(400).json({ error: "Producto sin stock disponible" });
     }
 
     res.json(updatedCart);
@@ -113,7 +121,7 @@ const updateCart = async (req, res) => {
     }
 
     const validProducts = products.every(
-      (item) => item.product && item.quantity > 0,
+      (item) => item.product && item.quantity > 0
     );
 
     if (!validProducts) {
