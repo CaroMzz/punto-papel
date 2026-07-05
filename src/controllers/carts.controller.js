@@ -1,8 +1,8 @@
-const cartManager = require("../dao/fs/CartManager");
+const cartDao = require("../dao/mongo/CartDao");
 
 const createCart = async (req, res) => {
   try {
-    const createdCart = await cartManager.createCart();
+    const createdCart = await cartDao.createCart();
     res.status(201).json(createdCart);
   } catch (error) {
     res.status(500).json({ error: "Error al crear el carrito" });
@@ -11,8 +11,9 @@ const createCart = async (req, res) => {
 
 const getCartById = async (req, res) => {
   try {
-    const cid = Number(req.params.cid);
-    const searchedCart = await cartManager.getCartById(cid);
+    const cid = req.params.cid;
+
+    const searchedCart = await cartDao.getCartById(cid);
 
     if (!searchedCart) {
       return res.status(404).json({ error: "Carrito no encontrado" });
@@ -26,15 +27,16 @@ const getCartById = async (req, res) => {
 
 const addProductToCart = async (req, res) => {
   try {
-    const cid = Number(req.params.cid);
-    const pid = Number(req.params.pid);
-    const searchedCart = await cartManager.addProductToCart(cid, pid);
+    const cid = req.params.cid;
+    const pid = req.params.pid;
 
-    if (!searchedCart) {
+    const updatedCart = await cartDao.addProductToCart(cid, pid);
+
+    if (!updatedCart) {
       return res.status(404).json({ error: "Carrito no encontrado" });
     }
 
-    res.json(searchedCart);
+    res.json(updatedCart);
   } catch (error) {
     res.status(500).json({ error: "Error al agregar el producto al carrito" });
   }
@@ -42,23 +44,22 @@ const addProductToCart = async (req, res) => {
 
 const deleteProductFromCart = async (req, res) => {
   try {
-    const cid = Number(req.params.cid);
-    const pid = Number(req.params.pid);
-    const searchedCart = await cartManager.getCartById(cid);
+    const cid = req.params.cid;
+    const pid = req.params.pid;
 
-    if (!searchedCart) {
+    const updatedCart = await cartDao.deleteProductFromCart(cid, pid);
+
+    if (updatedCart === null) {
       return res.status(404).json({ error: "Carrito no encontrado" });
     }
 
-    const deletedCart = await cartManager.deleteProductFromCart(cid, pid);
-
-    if (!deletedCart) {
+    if (updatedCart === false) {
       return res
         .status(404)
         .json({ error: "Producto no encontrado en el carrito" });
     }
 
-    res.json(deletedCart);
+    res.json(updatedCart);
   } catch (error) {
     res
       .status(500)
@@ -68,21 +69,18 @@ const deleteProductFromCart = async (req, res) => {
 
 const updateProductQuantity = async (req, res) => {
   try {
-    const cid = Number(req.params.cid);
-    const pid = Number(req.params.pid);
+    const cid = req.params.cid;
+    const pid = req.params.pid;
 
     const quantity = Number(req.body.quantity);
+
     if (!quantity || quantity <= 0) {
       return res
         .status(400)
         .json({ error: "La cantidad no puede ser 0 ni menos" });
     }
 
-    const updatedCart = await cartManager.updateProductQuantity(
-      cid,
-      pid,
-      quantity,
-    );
+    const updatedCart = await cartDao.updateProductQuantity(cid, pid, quantity);
 
     if (updatedCart === null) {
       return res.status(404).json({ error: "Carrito no encontrado" });
@@ -104,9 +102,10 @@ const updateProductQuantity = async (req, res) => {
 
 const updateCart = async (req, res) => {
   try {
-    const cid = Number(req.params.cid);
+    const cid = req.params.cid;
 
     const products = req.body.products;
+
     if (!Array.isArray(products)) {
       return res
         .status(400)
@@ -116,12 +115,14 @@ const updateCart = async (req, res) => {
     const validProducts = products.every(
       (item) => item.product && item.quantity > 0,
     );
+
     if (!validProducts) {
       return res.status(400).json({ error: "Ingreso invalido" });
     }
 
-    const updatedCart = await cartManager.updateCart(cid, products);
-    if (updatedCart === null) {
+    const updatedCart = await cartDao.updateCart(cid, products);
+
+    if (!updatedCart) {
       return res.status(404).json({ error: "Carrito no encontrado" });
     }
 
@@ -133,14 +134,15 @@ const updateCart = async (req, res) => {
 
 const clearCart = async (req, res) => {
   try {
-    const cid = Number(req.params.cid);
-    
-    const searchedCart = await cartManager.clearCart(cid);
-    if (searchedCart === null) {
+    const cid = req.params.cid;
+
+    const clearedCart = await cartDao.clearCart(cid);
+
+    if (!clearedCart) {
       return res.status(404).json({ error: "Carrito no encontrado" });
     }
 
-    res.json(searchedCart);
+    res.json(clearedCart);
   } catch (error) {
     res.status(500).json({ error: "Error al vaciar el carrito" });
   }
