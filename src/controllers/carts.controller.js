@@ -121,7 +121,7 @@ const updateCart = async (req, res) => {
     }
 
     const validProducts = products.every(
-      (item) => item.product && item.quantity > 0
+      (item) => item.product && item.quantity > 0,
     );
 
     if (!validProducts) {

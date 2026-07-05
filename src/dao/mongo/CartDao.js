@@ -30,7 +30,7 @@ class CartDao {
     }
 
     const productInCart = cart.products.find(
-      (item) => item.product.toString() === productId
+      (item) => item.product.toString() === productId,
     );
 
     if (productInCart) {
@@ -59,7 +59,7 @@ class CartDao {
     }
 
     const productIndex = cart.products.findIndex(
-      (item) => item.product.toString() === productId
+      (item) => item.product.toString() === productId,
     );
 
     if (productIndex === -1) {
@@ -81,7 +81,7 @@ class CartDao {
     }
 
     const productInCart = cart.products.find(
-      (item) => item.product.toString() === productId
+      (item) => item.product.toString() === productId,
     );
 
     if (!productInCart) {
@@ -102,7 +102,7 @@ class CartDao {
       {
         new: true,
         runValidators: true,
-      }
+      },
     ).populate("products.product");
 
     return updatedCart;
@@ -115,7 +115,7 @@ class CartDao {
       {
         new: true,
         runValidators: true,
-      }
+      },
     ).populate("products.product");
 
     return updatedCart;

@@ -81,7 +81,7 @@ class CartManager {
 
   async updateProductQuantity(cid, pid, quantity) {
     const carts = await this.getCarts();
-    
+
     const searchedCart = carts.find((cart) => cart.id === cid);
     if (!searchedCart) {
       return null;
@@ -101,7 +101,7 @@ class CartManager {
 
   async updateCart(cid, products) {
     const carts = await this.getCarts();
-    
+
     const searchedCart = carts.find((cart) => cart.id === cid);
     if (!searchedCart) {
       return null;
@@ -114,7 +114,7 @@ class CartManager {
 
   async clearCart(cid) {
     const carts = await this.getCarts();
-    
+
     const searchedCart = carts.find((cart) => cart.id === cid);
     if (!searchedCart) {
       return null;
